@@ -2,12 +2,13 @@
 """
 import argparse
 import yaml
-import logging
 import os
+import sys
 import pkg_resources
 from appdirs import user_config_dir
 from shreddit import default_config
 from shreddit.shredder import Shredder
+from shreddit.util import ShredditError
 
 
 def main():
@@ -66,6 +67,9 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except ShredditError as ex:
+        print("Error - %s" % ex, file=sys.stderr)
+        sys.exit(1)
     except KeyboardInterrupt:
-        print("Shreddit aborted by user")
-        quit()
+        print("Shreddit aborted by user", file=sys.stderr)
+        sys.exit(1)

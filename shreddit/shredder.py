@@ -1,14 +1,10 @@
 import arrow
-import argparse
 import json
 import logging
 import os
 import praw
-import sys
 import getpass
 import time
-import yaml
-from datetime import datetime, timedelta
 from praw.models import Comment, Submission
 from prawcore.exceptions import ResponseException, OAuthException, BadRequest
 from re import sub
@@ -50,7 +46,6 @@ class Shredder(object):
             for subreddit in multireddit.subreddits:
                 self._blacklist.add(str(subreddit).lower())
 
-
         self._logger.info("Deleting ALL items before {}".format(self._nuke_cutoff))
         self._logger.info("Deleting items not whitelisted until {}".format(self._recent_cutoff))
         self._logger.info("Ignoring ALL items after {}".format(self._recent_cutoff))
@@ -84,7 +79,15 @@ class Shredder(object):
                 password=passwd,
                 user_agent="python:shreddit:v6.0.4"
             )
-            self._logger.info("Logged in as {user}.".format(user=self._r.user.me()))
+            user = self._r.user.me()
+            if not user:
+                raise ShredditError(
+                    "Bad user (%r)? Make sure the praw.ini "
+                    "file contents are correct." % user
+                )
+            self._logger.info("Logged in as {user}.".format(user=user))
+        except ShredditError:
+            raise
         except ResponseException:
             raise ShredditError("Bad OAuth credentials")
         except OAuthException:
@@ -93,7 +96,7 @@ class Shredder(object):
     def _get_passwd(self):
         passwd = getpass.getpass("Enter password for Reddit user: ")
         if passwd != getpass.getpass("Confirm: "):
-            sys.exit("ERROR: Passwords do not match.")
+            raise ShredditError("Passwords do not match")
         return passwd
 
     def _check_whitelist(self, item):
