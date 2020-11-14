@@ -25,7 +25,7 @@ except ImportError:
 
 class ShredditError(Exception):
     def __init__(self, value=None):
-        self.value = value if value else "No information provided"
+        self.value = value or "No information provided"
 
     def __str__(self):
         return repr(self.value)

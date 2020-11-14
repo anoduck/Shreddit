@@ -64,7 +64,7 @@ def main():
         shredder = Shredder(default_config, args.user)
         shredder.shred()
     except ShredditError as ex:
-        print("Error - %s" % ex, file=sys.stderr)
+        print("ERROR: %s" % ex.value, file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         print("Shreddit aborted by user", file=sys.stderr)
