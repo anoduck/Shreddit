@@ -21,6 +21,8 @@ class Shredder(object):
         self.__dict__.update({"_{}".format(k): config[k] for k in config})
 
         self._user = user
+        if self._ask_pass:
+            self._password = self._prompt_passwd()
         self._connect()
 
         if self._save_directory:
@@ -72,13 +74,14 @@ class Shredder(object):
 
     def _connect(self):
         try:
-            passwd = self._get_passwd() if self._ask_pass else None
-            self._r = praw.Reddit(
-                self._user,
-                check_for_updates=False,
-                password=passwd,
-                user_agent="python:shreddit:v6.0.4"
-            )
+            kwargs = {
+                'check_for_updates': False,
+                'user_agent': "python:shreddit:v6.0.4"
+            }
+            if self._password:
+                kwargs['password'] = self._password
+
+            self._r = praw.Reddit(self._user, **kwargs)
             user = self._r.user.me()
             if not user:
                 raise ShredditError(
@@ -93,7 +96,7 @@ class Shredder(object):
         except OAuthException:
             raise ShredditError("Bad username or password")
 
-    def _get_passwd(self):
+    def _prompt_passwd(self):
         passwd = getpass.getpass("Enter password for Reddit user: ")
         if passwd != getpass.getpass("Confirm: "):
             raise ShredditError("Passwords do not match")
