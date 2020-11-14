@@ -60,16 +60,18 @@ def main():
     if args.ask_pass:
         default_config['ask_pass'] = True
 
-    shredder = Shredder(default_config, args.user)
-    shredder.shred()
+    try:
+        shredder = Shredder(default_config, args.user)
+        shredder.shred()
+    except ShredditError as ex:
+        print("Error - %s" % ex, file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("Shreddit aborted by user", file=sys.stderr)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except ShredditError as ex:
-        print("Error - %s" % ex, file=sys.stderr)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        print("Shreddit aborted by user", file=sys.stderr)
-        sys.exit(1)
+    sys.exit(main())
