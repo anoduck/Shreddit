@@ -4,4 +4,5 @@
 client_id=
 client_secret=
 username=
-password=
+# Can use `--ask-pass` switch instead
+# password=

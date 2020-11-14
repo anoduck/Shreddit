@@ -1,4 +1,7 @@
 ---
+# Asks for password interactively, instead of reading from the file
+ask_pass: False
+
 # How many hours of comments you want to keep
 # 24 hours in a day,
 # 168 hours in a week,

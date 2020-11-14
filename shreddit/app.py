@@ -15,7 +15,12 @@ def main():
     parser.add_argument("-c", "--config", help="Config file to use instead of the default shreddit.yml")
     parser.add_argument("-g", "--generate-configs", help="Write shreddit and praw config files to current directory.",
                         action="store_true")
-    parser.add_argument("-u", "--user", help="User section from praw.ini if not default", default="default")
+    parser.add_argument("-u", "--user", help="User section's name from praw.ini if not default", default="default")
+    parser.add_argument(
+        "--ask-pass", action="store_true", help=(
+            "Ask for the `password` entry interactively "
+            "instead of reading it from the file")
+    )
     args = parser.parse_args()
 
     if args.generate_configs:
@@ -49,6 +54,10 @@ def main():
         for option in default_config:
             if option in user_config:
                 default_config[option] = user_config[option]
+
+    # higher prio than config
+    if args.ask_pass:
+        default_config['ask_pass'] = True
 
     shredder = Shredder(default_config, args.user)
     shredder.shred()

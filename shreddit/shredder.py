@@ -5,6 +5,7 @@ import logging
 import os
 import praw
 import sys
+import getpass
 import time
 import yaml
 from datetime import datetime, timedelta
@@ -37,7 +38,7 @@ class Shredder(object):
                 os.makedirs(self._save_directory)
 
         # Add any multireddit subreddits to the whitelist
-        self._whitelist = set([s.lower() for s in self._whitelist])
+        self._whitelist = set(s.lower() for s in self._whitelist)
         for username, multiname in self._multi_whitelist:
             multireddit = self._r.multireddit(username, multiname)
             for subreddit in multireddit.subreddits:
@@ -77,12 +78,24 @@ class Shredder(object):
 
     def _connect(self):
         try:
-            self._r = praw.Reddit(self._user, check_for_updates=False, user_agent="python:shreddit:v6.0.4")
+            passwd = self._get_passwd() if self._ask_pass else None
+            self._r = praw.Reddit(
+                self._user,
+                check_for_updates=False,
+                password=passwd,
+                user_agent="python:shreddit:v6.0.4"
+            )
             self._logger.info("Logged in as {user}.".format(user=self._r.user.me()))
         except ResponseException:
             raise ShredditError("Bad OAuth credentials")
         except OAuthException:
             raise ShredditError("Bad username or password")
+
+    def _get_passwd(self):
+        passwd = getpass.getpass("Enter password for Reddit user: ")
+        if passwd != getpass.getpass("Confirm: "):
+            sys.exit("ERROR: Passwords do not match.")
+        return passwd
 
     def _check_whitelist(self, item):
         """Returns True if the item is whitelisted, False otherwise.

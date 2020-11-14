@@ -1,5 +1,6 @@
 default_config = {"username": None,
                   "password": None,
+                  "ask_pass": False,
                   "verbose": True,
                   "save_directory": "/tmp",
                   "whitelist": [],
