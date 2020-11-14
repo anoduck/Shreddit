@@ -20,9 +20,8 @@ class Shredder(object):
     application code can call to start it.
     """
     def __init__(self, config, user):
-        logging.basicConfig()
+        logging.basicConfig(level=logging.DEBUG if config.get("verbose", True) else logging.INFO)
         self._logger = logging.getLogger("shreddit")
-        self._logger.setLevel(level=logging.DEBUG if config.get("verbose", True) else logging.INFO)
         self.__dict__.update({"_{}".format(k): config[k] for k in config})
 
         self._user = user
@@ -133,10 +132,24 @@ class Shredder(object):
         else:
             replacement_text = self._replacement_format
 
-        short_text = sub(b"\n\r\t", " ", comment.body[:35].encode("utf-8"))
-        msg = "/r/{}/ #{} ({}) with: {}".format(comment.subreddit, comment.id, short_text, replacement_text)
+        if self._verbose:
+            self._logger.debug((
+                "Editing and deleting  /r/{subreddit}/ #{comment_id} "
+                "({short_text}) with: {replacement_text}"
+            ).format(
+                subreddit=comment.subreddit,
+                comment_id=comment.id,
+                short_text=sub(b"\n\r\t", " ", comment.body[:35].encode("utf-8")),
+                replacement_text=replacement_text
+            ))
+        else:
+            self._logger.info((
+                "Editing and deleting  /r/{subreddit}/ #{comment_id}"
+            ).format(
+                subreddit=comment.subreddit,
+                comment_id=comment.id,
+            ))
 
-        self._logger.debug("Editing and deleting {msg}".format(msg=msg))
         if not self._trial_run:
             comment.edit(replacement_text)
 
@@ -148,7 +161,7 @@ class Shredder(object):
                 try:
                     item.clear_vote()
                 except BadRequest:
-                    self._logger.debug("Couldn't clear vote on {item}".format(item=item))
+                    self._logger.error("Couldn't clear vote on {item}".format(item=item))
         if isinstance(item, Submission):
             self._remove_submission(item)
         elif isinstance(item, Comment):
@@ -159,25 +172,26 @@ class Shredder(object):
     def _remove_things(self, items):
         self._logger.info("Loading items to delete...")
         to_delete = [item for item in items]
-        self._logger.info("Done. Starting on batch of {} items...".format(len(to_delete)))
+        total_count = len(to_delete)
+        self._logger.info("Done. Starting on batch of {} items...".format(total_count))
         count, count_removed = 0, 0
         for item in to_delete:
             count += 1
-            self._logger.debug("Examining item {}: {}".format(count, item))
+            self._logger.info("Examining item {}/{}: {}".format(count, total_count, item))
             created = arrow.get(item.created_utc)
             if str(item.subreddit).lower() in self._blacklist:
-                self._logger.debug("Deleting due to blacklist")
+                self._logger.info("Deleting due to blacklist")
                 count_removed += 1
                 self._remove(item)
             elif created <= self._nuke_cutoff:
-                self._logger.debug("Item occurs prior to nuke cutoff")
+                self._logger.info("Item occurs prior to nuke cutoff")
                 count_removed += 1
                 self._remove(item)
             elif self._check_whitelist(item):
-                self._logger.debug("Skipping due to: whitelisted")
+                self._logger.info("Skipping due to: whitelisted")
                 continue
             elif created > self._recent_cutoff:
-                self._logger.debug("Skipping due to: too recent")
+                self._logger.info("Skipping due to: too recent")
                 continue
             else:
                 count_removed += 1
