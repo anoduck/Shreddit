@@ -1,8 +1,27 @@
 # Credentials go here. Fill out default, or provide one or more names and call shreddit with the -u option to specify
 # which set to use.
 [default]
-client_id=
-client_secret=
-username=
+# A boolean to indicate whether or not to check for package updates.
+check_for_updates=True
+
+client_id=14CHAR_ID
+client_secret=SECRET_FROM_REDDIT
+username=USERNAME
 # Can use `--ask-pass` switch instead
 # password=
+
+# Object to kind mappings
+comment_kind=t1
+message_kind=t4
+redditor_kind=t2
+submission_kind=t3
+subreddit_kind=t5
+
+# The URL prefix for OAuth-related requests.
+oauth_url=https://oauth.reddit.com
+
+# The URL prefix for regular requests.
+reddit_url=https://www.reddit.com
+
+# The URL prefix for short URLs.
+short_url=https://redd.it
