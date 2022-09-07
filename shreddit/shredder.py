@@ -174,6 +174,7 @@ class Shredder(object):
             self._remove_comment(item)
         if not self._trial_run:
             item.delete()
+            time.sleep(3)
 
     def _remove_things(self, items):
         self._logger.info("Loading items to delete...")
